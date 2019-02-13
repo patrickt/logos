@@ -31,7 +31,7 @@ noise Params{..} (row, col) height = runST $ do
   maxAmplitude <- ref 0.0
   amplitude    <- ref 1.0
   frequency    <- ref initialFreq
-  pure . (*100) . abs . fromMaybe 0 $ Noise.getValue perlin (fromIntegral row, fromIntegral col, 0.012)
+  pure . (*100) . abs . fromMaybe 0 $ Noise.getValue perlin (fromIntegral row, fromIntegral col, 0.02)
   --   traceShowM noise
 
   --   total        += noise

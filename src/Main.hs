@@ -6,57 +6,20 @@ import           Brick as Brick
 import qualified Brick.BorderMap as BorderMap
 import           Brick.Widgets.Border
 import           Brick.Widgets.Center
+import           Control.Lens
 import           Data.Version
 import qualified Graphics.Vty as Vty
 import qualified Graphics.Vty.Attributes as Attr
 import qualified Graphics.Vty.Image as Image
 import           Math.Geometry.Grid
 import           Math.Geometry.Grid.Square
-import qualified Math.Geometry.GridMap as GM
 import           Math.Geometry.GridMap ((!))
+import qualified Math.Geometry.GridMap as GM
 import           Math.Geometry.GridMap.Lazy
 import           Paths_logos (version)
-import           Noise as Noise
 
-data Biome = Ocean | Forest | Plains | Desert | Swamps deriving (Eq, Show)
-
-data Terrain = Terrain
-  { terrHeight :: !Double
-  , terrBiome  :: !Biome
-  } deriving (Show, Eq)
-
-terrainChar :: Terrain -> Char
-terrainChar t = case terrBiome t of
-  Ocean  -> '~'
-  Forest -> 'T'
-  Plains -> '.'
-  Desert -> '#'
-  Swamps -> '%'
-
-terrainElevation :: Terrain -> Char
-terrainElevation t
-  | terrHeight t > 10 = 'X'
-  | otherwise = head . show . round . terrHeight $ t
-
-terrainColor :: Terrain -> Vty.Attr
-terrainColor t = Attr.defAttr `Attr.withForeColor` color where
-  color = case terrBiome t of
-    Ocean  -> Attr.blue
-    Forest -> Attr.rgbColor 0   122 8
-    Plains -> Attr.rgbColor 0   237 35
-    Desert -> Attr.rgbColor 183 180 59
-    Swamps -> Attr.rgbColor 50  51  52
-
-terrainBurn :: Terrain -> Vty.Attr
-terrainBurn t = Attr.defAttr `Attr.withForeColor` color where
-  color
-    | terrHeight t < 2 = Attr.rgbColor 0   122 8
-    | terrHeight t < 5 = Attr.rgbColor 0   237 35
-    | terrHeight t < 8 = Attr.rgbColor 183 180 59
-    | otherwise      = Attr.rgbColor 50 51 52
-
-terrainImage :: Terrain -> Vty.Image
-terrainImage t = Image.char (terrainBurn t) (terrainElevation t)
+import Data.Terrain
+import Noise as Noise
 
 newtype World = World
   { worldMap :: LGridMap RectSquareGrid Terrain
@@ -67,7 +30,7 @@ sampleWorld = World (lazyGridMap (rectSquareGrid 30 40) (repeat (Terrain 0 Plain
 
 gennedWorld :: World -> World
 gennedWorld w = w { worldMap = GM.mapWithKey go (worldMap w)} where
-  go idx t = t { terrHeight = noise sampleParams idx (terrHeight t)}
+  go idx = over height (noise sampleParams idx)
 
 worldImage :: World -> Widget ()
 worldImage world = Widget Fixed Fixed . render . Brick.vBox $ do
@@ -78,7 +41,7 @@ worldImage world = Widget Fixed Fixed . render . Brick.vBox $ do
   pure $ Brick.hBox $ do
     col <- [0..(w - 1)]
     let res = (worldMap world) ! (col, row)
-    pure . raw . terrainImage $ res
+    pure . raw . charImage . Elevation $ res
   -- pure . Brick.hBox $ do
   --   col <- [0..6]
   --   pure $ Widget (terrainImage (worldMap w ! (row, col))) [] [] [] BorderMap.empty

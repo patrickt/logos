@@ -4,7 +4,6 @@ version:             0.1.0.0
 -- description:
 homepage:            https://github.com/patrickt/logos#readme
 license:             AllRightsReserved
-license-file:        LICENSE
 author:              Patrick Thomson
 maintainer:          patrickt@github.com
 copyright:           Patrick Thomson
@@ -17,6 +16,7 @@ executable logos
   hs-source-dirs:      src
   main-is:             Main.hs
   other-modules:       Noise
+                     , Data.HeightMap
   default-language:    Haskell2010
   ghc-options:         -threaded
   other-modules:       Paths_logos
@@ -36,7 +36,12 @@ executable logos
                      , TypeApplications
   build-depends:       base >= 4.7 && < 5
                      , brick
+                     , finite-typelits
+                     , fused-effects
                      , grid
                      , hedgehog
+                     , lens
+                     , random
+                     , MonadRandom
                      , Noise
                      , vty
