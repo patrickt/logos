@@ -5,6 +5,7 @@ module Data.Terrain
   , height
   , biome
   , flood
+  , lookup
   , Biome (..)
   , charImage
   , Elevation (..)

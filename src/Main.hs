@@ -2,6 +2,8 @@
 
 module Main where
 
+import Prelude hiding (lookup)
+
 import           Brick as Brick
 import qualified Brick.BorderMap as BorderMap
 import           Brick.Widgets.Border
@@ -11,6 +13,7 @@ import           Data.Version
 import qualified Graphics.Vty as Vty
 import qualified Graphics.Vty.Attributes as Attr
 import qualified Graphics.Vty.Image as Image
+import Data.Maybe
 import           Math.Geometry.Grid
 import           Math.Geometry.Grid.Square
 import           Math.Geometry.GridMap ((!))
@@ -18,7 +21,8 @@ import qualified Math.Geometry.GridMap as GM
 import           Math.Geometry.GridMap.Lazy
 import           Paths_logos (version)
 
-import Data.Terrain
+import Data.Terrain as Terrain
+import Data.HeightMap as HeightMap
 import Noise as Noise
 
 newtype World = World
@@ -27,6 +31,9 @@ newtype World = World
 
 sampleWorld :: World
 sampleWorld = World (lazyGridMap (rectSquareGrid 30 40) (repeat (Terrain 0 Plains)))
+
+fromHeightMap :: HeightMap n -> World -> World
+fromHeightMap hm (World w) = World (GM.mapWithKey (\k f -> f & height .~ 11 * (fromMaybe 0 (HeightMap.lookup k hm))) w)
 
 gennedWorld :: World -> World
 gennedWorld w = w { worldMap = GM.mapWithKey go (worldMap w)} where
@@ -55,5 +62,6 @@ ui w = borderWithLabel versionLabel (center (worldImage w))
 
 main :: IO ()
 main = do
-  let world = gennedWorld sampleWorld
+  hm <- makeHeightMap @33
+  let world = fromHeightMap hm sampleWorld
   simpleMain (ui world)

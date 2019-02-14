@@ -3,6 +3,7 @@
 module Data.HeightMap
   ( HeightMap (..)
   , empty
+  , lookup
   , makeHeightMap
   ) where
 
@@ -67,7 +68,7 @@ data DisplaceParams = DisplaceParams
   , by     :: Int
   , ty     :: Int
   , spread :: Double
-  }
+  } deriving (Show, Eq)
 
 randAroundZero :: (MonadRandom m, Random n, Num n) => n -> m n
 randAroundZero spread = do
@@ -81,7 +82,7 @@ makeHeightMap :: (ValidSize n, MonadFail m, MonadRandom m) => m (HeightMap n)
 makeHeightMap = do
   hm <- initializeCorners empty
   let params = DisplaceParams 0 (side hm) 0 (side hm) 0.1
-  displaceRecursively (side hm) params hm
+  displaceRecursively params hm
 
 displace :: forall m n . (MonadFail m, MonadRandom m) => DisplaceParams -> HeightMap n -> m (HeightMap n)
 displace DisplaceParams{..} hm = do
@@ -98,8 +99,6 @@ displace DisplaceParams{..} hm = do
       left = average [bottomLeft, topLeft]
       bottom = average [bottomLeft, bottomRight]
       right = average [bottomRight, topRight]
-
-  traceShowM (top, left, bottom, right)
 
   jbottom <- jitter bottom spread
   jtop    <- jitter top spread
@@ -118,23 +117,36 @@ displace DisplaceParams{..} hm = do
 roundUp :: Double -> Int
 roundUp x = let base = x - fromIntegral (floor x) in (if base < 0.5 then round else ceiling) x
 
-displaceRecursively :: forall m n . (MonadFail m, MonadRandom m)
-                    => Int
-                    -> DisplaceParams
+displaceRecursively :: forall m n . (ValidSize n, MonadFail m, MonadRandom m)
+                    => DisplaceParams
                     -> HeightMap n
                     -> m (HeightMap n)
-displaceRecursively 3 ps h = displace ps h
-displaceRecursively n ps@DisplaceParams{..} h = do
-  let mid = round ((sum $ fmap fromIntegral [lx, rx]) / 2)
-  pure h
-    >>= displaceRecursively (n - 1) (ps { by = by - mid, lx = lx + mid})
-    >>= displaceRecursively (n - 1) (ps { by = by - mid, rx = rx - mid})
-    >>= displaceRecursively (n - 1) (ps { ty = ty + mid, rx = rx - mid})
-    >>= displaceRecursively (n - 1) (ps { ty = ty + mid, lx = lx + mid})
-  -- >>= displace (ps { by = by  mid, ry = ry - mid})
-  -- >>= displace (ps { rx = rx - mid, ry = ry - mid})
+displaceRecursively ps@DisplaceParams{..} h = do
+  let chunk = roundUp ((fromIntegral ((rx - lx) - 1)) / 2)
+  let a = ps { rx = lx + chunk, by = ty + chunk}
+      b = ps { lx = lx + chunk, by = ty + chunk}
+      c = ps { rx = lx + chunk, ty = ty - chunk}
+      d = ps { lx = lx + chunk, ty = ty - chunk}
 
--- displaceRecursively params hm = do
---   let
+  traceShowM (chunk, ps)
 
--- todo iterate
+  if chunk <= 3 then displace ps h else do
+    displaceRecursively a h
+      >>= displaceRecursively b
+      >>= displaceRecursively c
+
+-- displaceRecursively 3 ps h = displace ps h
+-- displaceRecursively n ps@DisplaceParams{..} h = do
+--   let mid = round ((sum $ fmap fromIntegral [lx, rx]) / 2)
+--   pure h
+--     >>= displaceRecursively (n - 1) (ps { by = by - mid, lx = lx + mid})
+--     >>= displaceRecursively (n - 1) (ps { by = by - mid, rx = rx - mid})
+--     >>= displaceRecursively (n - 1) (ps { ty = ty + mid, rx = rx - mid})
+--     >>= displaceRecursively (n - 1) (ps { ty = ty + mid, lx = lx + mid})
+--   -- >>= displace (ps { by = by  mid, ry = ry - mid})
+--   -- >>= displace (ps { rx = rx - mid, ry = ry - mid})
+
+-- -- displaceRecursively params hm = do
+-- --   let
+
+-- -- todo iterate
