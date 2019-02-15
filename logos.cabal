@@ -17,6 +17,7 @@ executable logos
   main-is:             Main.hs
   other-modules:       Noise
                      , Data.HeightMap
+                     , Data.Rect
   default-language:    Haskell2010
   ghc-options:         -threaded
   other-modules:       Paths_logos
@@ -42,6 +43,7 @@ executable logos
                      , hedgehog
                      , lens
                      , random
+                     , semilattices
                      , MonadRandom
                      , Noise
                      , vty

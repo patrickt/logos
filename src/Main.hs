@@ -20,6 +20,8 @@ import           Math.Geometry.GridMap ((!))
 import qualified Math.Geometry.GridMap as GM
 import           Math.Geometry.GridMap.Lazy
 import           Paths_logos (version)
+import Data.Rect (Point (Point))
+import Data.Proxy
 
 import Data.Terrain as Terrain
 import Data.HeightMap as HeightMap
@@ -32,8 +34,8 @@ newtype World = World
 sampleWorld :: World
 sampleWorld = World (lazyGridMap (rectSquareGrid 30 40) (repeat (Terrain 0 Plains)))
 
-fromHeightMap :: HeightMap n -> World -> World
-fromHeightMap hm (World w) = World (GM.mapWithKey (\k f -> f & height .~ 11 * (fromMaybe 0 (HeightMap.lookup k hm))) w)
+fromHeightMap :: HeightMap -> World -> World
+fromHeightMap hm (World w) = World (GM.mapWithKey (\(x, y) f -> f & height .~ 11 * (fromMaybe 0 (HeightMap.lookup (Point x y) hm))) w)
 
 gennedWorld :: World -> World
 gennedWorld w = w { worldMap = GM.mapWithKey go (worldMap w)} where
@@ -62,6 +64,6 @@ ui w = borderWithLabel versionLabel (center (worldImage w))
 
 main :: IO ()
 main = do
-  hm <- makeHeightMap @33
+  hm <- makeHeightMap (Proxy @33)
   let world = fromHeightMap hm sampleWorld
   simpleMain (ui world)
