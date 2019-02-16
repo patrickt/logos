@@ -1,4 +1,6 @@
-{-# LANGUAGE KindSignatures, QuantifiedConstraints, ConstraintKinds, ScopedTypeVariables, TemplateHaskell, TypeFamilies #-}
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
+{-# LANGUAGE ConstraintKinds, KindSignatures, QuantifiedConstraints, ScopedTypeVariables, TemplateHaskell,
+             TypeFamilies, TypeOperators, UndecidableInstances #-}
 
 module Data.HeightMap
   ( HeightMap (..)
@@ -11,22 +13,19 @@ module Data.HeightMap
 
 import Prelude hiding (lookup)
 
-import           Control.Lens hiding (view)
-import           Control.Monad
-import           Control.Monad.Fail
-import           Data.Coerce
-import           Data.Maybe
-import           Data.Proxy
 import           Control.Effect
 import           Control.Effect.Lens
-import           Control.Effect.State
-import           Control.Effect.Reader
 import           Control.Effect.Random
-import           Debug.Trace
-import           GHC.TypeLits
+import           Control.Effect.Reader
+import           Control.Effect.State
+import           Control.Lens hiding (view)
+import           Control.Monad
+import           Control.Monad.IO.Class
+import           Data.Point
+import           Data.Proxy
 import           Data.Rect as Rect
 import           Data.Size
-import           Data.Point
+import           GHC.TypeLits
 import qualified Math.Geometry.Grid as G
 import           Math.Geometry.Grid.Square
 import qualified Math.Geometry.GridMap as GM
@@ -37,24 +36,20 @@ newtype HeightMap = HeightMap
   } deriving (Eq, Show)
 
 class KnownNat n => ValidSize (n :: Nat)
-instance ValidSize 3
-instance ValidSize 5
-instance ValidSize 9
-instance ValidSize 17
-instance ValidSize 33
-instance ValidSize 65
-instance ValidSize 129
-instance ValidSize 257
+
+-- Valid for all n where n = (2^x + 1) for some x
+instance (KnownNat n, (2 ^ (Log2 (n - 1))) ~ (n - 1)) => ValidSize n
+
+-- Pass in a proof (with a proxy) that the dimensions are valid
+empty :: forall n . ValidSize n => Proxy n -> HeightMap
+empty n = let size = fromIntegral $ natVal n
+  in HeightMap (GM.lazyGridMap (rectSquareGrid size size) (repeat 0))
 
 data Params = Params
   { _spread :: Double
   } deriving (Eq, Show)
 
 makeLenses ''Params
-
-empty :: forall n . ValidSize n => Proxy n -> HeightMap
-empty n = let size = fromIntegral $ natVal n
-  in HeightMap (GM.lazyGridMap (rectSquareGrid size size) (repeat 0))
 
 insert :: Point Int -> Double -> HeightMap -> HeightMap
 insert (Point x y) d (HeightMap m) = HeightMap (GM.insert (x, y) d m)
@@ -97,20 +92,20 @@ setEdges [tl, tr, br, bl] = do
       left   = avg tl bl
       avg a b = (a + b) / 2.0
 
-  bounds <- fmap fromIntegral <$> ask @(Rect Int)
+  bounds <- fmap (fromIntegral @_ @Double) <$> ask @(Rect Int)
   let vals = zip [top, right, bottom, left] (Rect.edges bounds)
   forM vals $ \(avg, pos) -> do
     jittered <- jitter avg
     jittered <$ modify (insert (fmap ceiling pos) jittered)
+setEdges _ = error "invariant violated: invalid params to setEdges"
 
 setCenter :: Displacement sig m => [Double] -> m ()
 setCenter vals = do
   let avg = sum vals / fromIntegral (length vals)
   jittered <- jitter avg
   rect <- ask @(Rect Int)
-  let cent = (fmap fromIntegral rect) ^. Rect.center
+  let cent = (fmap (fromIntegral @_ @Double) rect) ^. Rect.center
   modify (insert (fmap round cent) jittered)
-
 
 normalize :: Displacement sig m => m ()
 normalize = do
@@ -122,9 +117,10 @@ normalize = do
       compensate _ level = (10 * (level - min) / span)
   modify (\(HeightMap hm) -> HeightMap (GM.mapWithKey compensate hm))
 
-makeHeightMap :: forall n . (ValidSize n) => Proxy n -> IO HeightMap
+makeHeightMap :: ValidSize n => Proxy n -> IO HeightMap
 makeHeightMap p = let hm = empty p in
-  runM
+  liftIO
+  . runM
   . evalRandomIO
   . execState hm
   . runReader (Params 0.35)

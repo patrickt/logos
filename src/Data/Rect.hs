@@ -20,9 +20,6 @@ import Data.Point
 import Data.Semilattice.Lower
 import Data.Size
 
-zero :: Lower a => a
-zero = lowerBound
-
 data Rect a = Rect
   { _origin :: !(Point a)
   , _rsize  :: !(Size a)
@@ -83,10 +80,3 @@ corners r = [topleft, topright, bottomright, bottomleft] where
   topright = Point (r^.maxX) (r^.minY)
   bottomright = Point (r^.maxX) (r^.maxY)
   bottomleft = Point (r^.minX) (r^.maxY)
-
--- icorners :: Num a => Rect a -> [Point a]
--- icorners r = [topleft, topright, bottomright, bottomleft] where
---   topleft = r^.origin
---   topright = Point (r^.maxX - 1) (r^.minY)
---   bottomright = Point (r^.maxX - 1) (r^.maxY - 1)
---   bottomleft = Point (r^.minX) (r^.maxY - 1)

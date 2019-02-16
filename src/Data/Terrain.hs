@@ -1,7 +1,7 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE LambdaCase, TemplateHaskell #-}
 
 module Data.Terrain
-  ( Terrain (..)
+  ( Terrain (Terrain)
   , height
   , biome
   , flood
@@ -38,26 +38,22 @@ instance CharDisplay Biome where
   displayAttr attr self = attr `Attr.withForeColor` color where
     color = case self of
       Ocean  -> Attr.blue
-      Forest -> Attr.rgbColor 0   122 8
-      Plains -> Attr.rgbColor 0   237 35
-      Desert -> Attr.rgbColor 183 180 59
-      Swamps -> Attr.rgbColor 50  51  52
+      Forest -> Attr.rgbColor @Int 0   122 8
+      Plains -> Attr.rgbColor @Int 0   237 35
+      Desert -> Attr.rgbColor @Int 183 180 59
+      Swamps -> Attr.rgbColor @Int 50  51  52
 
 data Terrain = Terrain
-  { terrainHeight :: !Double
-  , terrainBiome  :: !Biome
+  { _height :: !Double
+  , _biome  :: !Biome
   } deriving (Show, Eq)
 
-height :: Lens' Terrain Double
-height = lens terrainHeight (\t h -> t { terrainHeight = h})
-
-biome :: Lens' Terrain Biome
-biome = lens terrainBiome (\t h -> t { terrainBiome = h})
+makeLenses ''Terrain
 
 flood :: Terrain -> Terrain
 flood t
-  | t^.height < 1 = t & biome .~ Ocean
-  | otherwise     = t
+  | t^.height < 0.8 = t & biome .~ Ocean
+  | otherwise       = t
 
 instance CharDisplay Terrain where
   displayChar = displayChar . Elevation
@@ -66,12 +62,12 @@ instance CharDisplay Terrain where
 instance CharDisplay (Elevation Terrain) where
   displayChar (Elevation t)
     | t^.height > 10 = 'X'
-    | otherwise = head . show . round . view height $ t
+    | otherwise = head . show @Int . round . view height $ t
 
   displayAttr a (Elevation t) = a `Attr.withForeColor` color where
     h = t^.height
     color
-      | h < 2 = Attr.rgbColor 0   122 8
-      | h < 5 = Attr.rgbColor 0   237 35
-      | h < 8 = Attr.rgbColor 183 180 59
-      | otherwise      = Attr.rgbColor 50 51 52
+      | h < 2     = Attr.rgbColor @Int 0   122 8
+      | h < 5     = Attr.rgbColor @Int 0   237 35
+      | h < 8     = Attr.rgbColor @Int 183 180 59
+      | otherwise = Attr.rgbColor @Int 50  51  52

@@ -19,10 +19,14 @@ executable logos
                      , Data.HeightMap
                      , Data.Point
                      , Data.Rect
+                     , Data.Size
                      , Data.Terrain
                      , Data.World
+                     , Logos.App
+                     , Logos.Draw
+                     , Logos.State
   default-language:    Haskell2010
-  ghc-options:         -threaded
+  ghc-options:         -threaded -Wall -Werror
   other-modules:       Paths_logos
   default-extensions:  DataKinds
                      , DeriveFoldable
