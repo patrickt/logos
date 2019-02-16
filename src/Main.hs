@@ -11,8 +11,9 @@ import           Brick.Widgets.Center
 import           Control.Lens
 import           Data.Maybe
 import           Data.Proxy
-import           Data.Rect (Point (Point))
+import           Data.Rect hiding (center)
 import           Data.Version
+import           Data.World
 import qualified Graphics.Vty as Vty
 import qualified Graphics.Vty.Attributes as Attr
 import qualified Graphics.Vty.Image as Image
@@ -22,7 +23,6 @@ import           Math.Geometry.GridMap ((!))
 import qualified Math.Geometry.GridMap as GM
 import           Math.Geometry.GridMap.Lazy
 import           Paths_logos (version)
-import Data.World
 
 import Data.HeightMap as HeightMap
 import Data.Terrain as Terrain

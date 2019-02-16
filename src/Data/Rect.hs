@@ -1,13 +1,7 @@
 {-# LANGUAGE FunctionalDependencies, TemplateHaskell, TypeFamilies #-}
 
 module Data.Rect
-  ( Point (Point)
-  , xpos
-  , ypos
-  , zero
-  , Size (Size)
-  , HasSize (..)
-  , Rect (Rect)
+  ( Rect (Rect)
   , midX
   , midY
   , rect
@@ -48,8 +42,8 @@ rect :: a -> a -> a -> a -> Rect a
 rect a b c d = Rect (Point a b) (Size c d)
 
 minX, minY :: Getter (Rect a) a
-minX = origin.xpos
-minY = origin.ypos
+minX = origin.x
+minY = origin.y
 
 midX, midY :: Fractional a => Getter (Rect a) a
 midX = to (\r -> r^.minX + (r^.width / 2))
@@ -66,8 +60,8 @@ integral :: (RealFrac a, Integral b) => Rect a -> Rect b
 integral r = Rect (fmap round (r^.origin)) (fmap ceiling (r^.size))
 
 translate :: Num a => Point a -> Rect a -> Rect a
-translate p r = r & origin.xpos +~ p^.xpos
-                  & origin.ypos +~ p^.ypos
+translate p r = r & origin.x +~ p^.x
+                  & origin.y +~ p^.y
 
 inset :: Num a => a -> Rect a -> Rect a
 inset p r = r & size.width -~ p

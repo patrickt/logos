@@ -24,8 +24,9 @@ import           Control.Effect.Reader
 import           Control.Effect.Random
 import           Debug.Trace
 import           GHC.TypeLits
-import           Data.Rect (Rect, Point (Point), size, width, origin, xpos, ypos)
-import qualified Data.Rect as Rect
+import           Data.Rect as Rect
+import           Data.Size
+import           Data.Point
 import qualified Math.Geometry.Grid as G
 import           Math.Geometry.Grid.Square
 import qualified Math.Geometry.GridMap as GM
@@ -140,11 +141,11 @@ churn = do
       let newside = rect^.width `div` 2
       let q1 = rect & size.mapped %~ (`div` 2)
       local (const q1) churn
-      let q2 = q1 & origin.xpos +~ newside
+      let q2 = q1 & origin.x +~ newside
       local (const q2) churn
-      let q3 = q2 & origin.ypos +~ newside
+      let q3 = q2 & origin.y +~ newside
       local (const q3) churn
-      let q4 = q3 & origin.xpos -~ newside
+      let q4 = q3 & origin.x -~ newside
       local (const q4) churn
 
 -- average :: [Double] -> Double

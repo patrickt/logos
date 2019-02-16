@@ -9,8 +9,8 @@ import Control.Lens.TH
 import Data.Semilattice.Lower
 
 data Point a = Point
-  { _xpos :: !a
-  , _ypos :: !a
+  { _x :: !a
+  , _y :: !a
   } deriving (Eq, Functor)
 
 instance Show a => Show (Point a) where

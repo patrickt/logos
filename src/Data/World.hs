@@ -13,8 +13,9 @@ import           Control.Lens
 import           Data.HeightMap as HeightMap
 import           Data.Maybe
 import           Data.Proxy
-import           Data.Rect (Point (Point))
-import           Data.Rect hiding (size)
+import           Data.Point
+import           Data.Size hiding (size)
+import           Data.Rect
 import           Data.Terrain
 import           Data.Version
 import qualified Graphics.Vty as Vty
