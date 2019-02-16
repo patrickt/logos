@@ -43,6 +43,6 @@ handleEvent s e = case parseEvent e of
   Just Logos.Quit  -> Brick.halt s
   Just Logos.Flood -> Brick.continue (s & world %~ deluge)
   Just Logos.Regen -> do
-    hm <- liftIO . makeHeightMap $ Proxy @17
+    hm <- liftIO . makeHeightMap $ Proxy @33
     let newState = s & world %~ fromHeightMap hm
     Brick.continue newState

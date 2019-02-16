@@ -2,8 +2,8 @@
 
 module Data.Rect
   ( Rect (Rect)
-  , midX
-  , midY
+  , minX, midX, maxX
+  , minY, midY, maxY
   , rect
   , integral
   , center

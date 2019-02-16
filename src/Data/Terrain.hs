@@ -52,11 +52,11 @@ makeLenses ''Terrain
 
 flood :: Terrain -> Terrain
 flood t
-  | t^.height < 0.8 = t & biome .~ Ocean
-  | otherwise       = t
+  | t^.height < 3.5 = t & biome .~ Ocean
+  | otherwise       = t & biome .~ Plains
 
 instance CharDisplay Terrain where
-  displayChar = displayChar . Elevation
+  displayChar = displayChar . view biome
   displayAttr a = displayAttr a . view biome
 
 instance CharDisplay (Elevation Terrain) where
