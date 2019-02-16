@@ -4,6 +4,7 @@ module Data.World
   , fromHeightMap
   , drawWorld
   , freshWorld
+  , deluge
   , lookupUnsafe
   , dimensions
   ) where
@@ -37,6 +38,9 @@ freshWorld p = World (lazyGridMap (rectSquareGrid n n) (repeat (Terrain 0 Plains
 
 dimensions :: World -> Size Int
 dimensions (World m) = Size w h where (h, w) = size m
+
+deluge :: World -> World
+deluge (World m) = World (GM.mapWithKey (\(x, y) f -> flood f) m)
 
 lookupUnsafe :: HasCallStack => Point Int -> World -> Terrain
 lookupUnsafe (Point x y) (World m) = m ! (y, x)

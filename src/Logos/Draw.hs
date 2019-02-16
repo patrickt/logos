@@ -51,6 +51,7 @@ readout = do
 keyBindings :: Widget n
 keyBindings = hLimit 30 . center $ vBox [ str "<r> Regenerate"
                                         , str "<s> Step"
+                                        , str "<f> Flood world"
                                         , str "<q> Quit"
                                         ]
 
