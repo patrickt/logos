@@ -22,24 +22,11 @@ import           Math.Geometry.GridMap ((!))
 import qualified Math.Geometry.GridMap as GM
 import           Math.Geometry.GridMap.Lazy
 import           Paths_logos (version)
+import Data.World
 
 import Data.HeightMap as HeightMap
 import Data.Terrain as Terrain
 import Noise as Noise
-
-newtype World = World
-  { worldMap :: LGridMap RectSquareGrid Terrain
-  } deriving (Show, Eq)
-
-sampleWorld :: World
-sampleWorld = World (lazyGridMap (rectSquareGrid 33 33) (repeat (Terrain 0 Plains)))
-
-fromHeightMap :: HeightMap -> World -> World
-fromHeightMap hm (World w) = World (GM.mapWithKey (\(x, y) f -> f & height .~ fromMaybe 0 (HeightMap.lookup (Point x y) hm)) w)
-
-gennedWorld :: World -> World
-gennedWorld w = w { worldMap = GM.mapWithKey go (worldMap w)} where
-  go idx = over height (noise sampleParams idx)
 
 worldImage :: World -> Widget ()
 worldImage world = Widget Fixed Fixed . render . Brick.vBox $ do

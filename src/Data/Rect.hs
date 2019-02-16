@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies, FunctionalDependencies #-}
+{-# LANGUAGE FunctionalDependencies, TemplateHaskell, TypeFamilies #-}
 
 module Data.Rect
   ( Point (Point)
@@ -21,42 +21,17 @@ module Data.Rect
   , inset
   ) where
 
-import Prelude
 import Control.Lens
+import Data.Point
 import Data.Semilattice.Lower
+import Data.Size
 
 zero :: Lower a => a
 zero = lowerBound
 
-data Point a = Point
-  { _xpos :: !a
-  , _ypos :: !a
-  } deriving (Eq, Functor)
-
-instance Show a => Show (Point a) where
-  showsPrec n (Point x y)
-    = c '{' . showsPrec n x . c ',' . showsPrec n y . c '}' where c = showChar
-
-instance Num a => Lower (Point a) where lowerBound = Point 0 0
-
-makeClassy ''Point
-
-data Size a = Size
-  { _width  :: !a
-  , _height :: !a
-  } deriving (Eq, Functor)
-
-instance Num a => Lower (Size a) where lowerBound = Size 0 0
-
-instance Show a => Show (Size a) where
-  showsPrec n (Size w h)
-    = c '{' . showsPrec n w . c ',' . showsPrec n h . c '}' where c = showChar
-
-makeClassy ''Size
-
 data Rect a = Rect
-  { _origin   :: !(Point a)
-  , _rsize :: !(Size a)
+  { _origin :: !(Point a)
+  , _rsize  :: !(Size a)
   } deriving (Eq, Functor)
 
 instance Show a => Show (Rect a) where

@@ -17,8 +17,10 @@ executable logos
   main-is:             Main.hs
   other-modules:       Noise
                      , Data.HeightMap
-                     , Data.Terrain
+                     , Data.Point
                      , Data.Rect
+                     , Data.Terrain
+                     , Data.World
   default-language:    Haskell2010
   ghc-options:         -threaded
   other-modules:       Paths_logos
