@@ -17,7 +17,6 @@ import           Logos.State (initialState)
 import           Math.Geometry.GridMap ((!))
 import           Paths_logos (version)
 
-import Data.HeightMap
 import Data.Terrain as Terrain
 
 worldImage :: World -> Widget ()

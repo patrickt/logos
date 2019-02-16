@@ -4,6 +4,7 @@ module Data.World
   , fromHeightMap
   , drawWorld
   , freshWorld
+  , lookupUnsafe
   , dimensions
   ) where
 
@@ -35,6 +36,9 @@ freshWorld p = World (lazyGridMap (rectSquareGrid n n) (repeat (Terrain 0 Plains
 
 dimensions :: World -> Size Int
 dimensions (World m) = Size w h where (h, w) = size m
+
+lookupUnsafe :: Point Int -> World -> Terrain
+lookupUnsafe (Point x y) (World m) = m ! (y, x)
 
 drawWorld :: World -> Widget ()
 drawWorld world = Widget Fixed Fixed . render . Brick.vBox $ do
