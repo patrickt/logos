@@ -22,14 +22,17 @@ versionLabel = str ("logos v" <> showVersion version)
 draw :: Logos.State -> [Widget n]
 draw s = run . runReader s $ do
   display <- readout
+  bar <- pure statusBar
   let mainScreen = hBox [ keyBindings
                         , vBorder
                         , center display
                         , vBorder
                         , information
                         ]
-  pure $ [borderWithLabel versionLabel mainScreen]
+  pure $ [borderWithLabel versionLabel (mainScreen <=> hBorder <=> bar)]
 
+statusBar :: Widget n
+statusBar = vLimit 1 . center $ str "Status bar"
 
 readout :: ( Member (Reader Logos.State) sig
            , Carrier sig m, Monad m

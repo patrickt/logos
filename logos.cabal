@@ -24,6 +24,7 @@ executable logos
                      , Data.World
                      , Logos.App
                      , Logos.Draw
+                     , Logos.Event
                      , Logos.State
   default-language:    Haskell2010
   ghc-options:         -threaded -Wall -Werror

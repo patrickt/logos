@@ -14,9 +14,10 @@ import           Data.HeightMap as HeightMap
 import           Data.Maybe
 import           Data.Point
 import           Data.Proxy
-import           GHC.TypeLits
 import           Data.Size hiding (size)
 import           Data.Terrain
+import           GHC.Stack
+import           GHC.TypeLits
 import           Math.Geometry.Grid hiding (Size)
 import           Math.Geometry.Grid.Square
 import           Math.Geometry.GridMap ((!))
@@ -37,7 +38,7 @@ freshWorld p = World (lazyGridMap (rectSquareGrid n n) (repeat (Terrain 0 Plains
 dimensions :: World -> Size Int
 dimensions (World m) = Size w h where (h, w) = size m
 
-lookupUnsafe :: Point Int -> World -> Terrain
+lookupUnsafe :: HasCallStack => Point Int -> World -> Terrain
 lookupUnsafe (Point x y) (World m) = m ! (y, x)
 
 drawWorld :: World -> Widget ()
