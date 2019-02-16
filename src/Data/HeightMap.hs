@@ -126,7 +126,7 @@ makeHeightMap p = let hm = empty p in
   runM
   . evalRandomIO
   . execState hm
-  . runReader (Params 0.3)
+  . runReader (Params 0.35)
   . runReader (Rect.rect 0 0 (side hm - 1) (side hm - 1))
   $ churn
 
