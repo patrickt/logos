@@ -9,22 +9,22 @@ import qualified Brick.BorderMap as BorderMap
 import           Brick.Widgets.Border
 import           Brick.Widgets.Center
 import           Control.Lens
+import           Data.Maybe
+import           Data.Proxy
+import           Data.Rect (Point (Point))
 import           Data.Version
 import qualified Graphics.Vty as Vty
 import qualified Graphics.Vty.Attributes as Attr
 import qualified Graphics.Vty.Image as Image
-import Data.Maybe
 import           Math.Geometry.Grid
 import           Math.Geometry.Grid.Square
 import           Math.Geometry.GridMap ((!))
 import qualified Math.Geometry.GridMap as GM
 import           Math.Geometry.GridMap.Lazy
 import           Paths_logos (version)
-import Data.Rect (Point (Point))
-import Data.Proxy
 
-import Data.Terrain as Terrain
 import Data.HeightMap as HeightMap
+import Data.Terrain as Terrain
 import Noise as Noise
 
 newtype World = World
@@ -32,10 +32,10 @@ newtype World = World
   } deriving (Show, Eq)
 
 sampleWorld :: World
-sampleWorld = World (lazyGridMap (rectSquareGrid 30 40) (repeat (Terrain 0 Plains)))
+sampleWorld = World (lazyGridMap (rectSquareGrid 33 33) (repeat (Terrain 0 Plains)))
 
 fromHeightMap :: HeightMap -> World -> World
-fromHeightMap hm (World w) = World (GM.mapWithKey (\(x, y) f -> f & height .~ 11 * (fromMaybe 0 (HeightMap.lookup (Point x y) hm))) w)
+fromHeightMap hm (World w) = World (GM.mapWithKey (\(x, y) f -> f & height .~ fromMaybe 0 (HeightMap.lookup (Point x y) hm)) w)
 
 gennedWorld :: World -> World
 gennedWorld w = w { worldMap = GM.mapWithKey go (worldMap w)} where
@@ -50,7 +50,7 @@ worldImage world = Widget Fixed Fixed . render . Brick.vBox $ do
   pure $ Brick.hBox $ do
     col <- [0..(w - 1)]
     let res = (worldMap world) ! (col, row)
-    pure . raw . charImage . Elevation $ res
+    pure . raw . charImage $ res
   -- pure . Brick.hBox $ do
   --   col <- [0..6]
   --   pure $ Widget (terrainImage (worldMap w ! (row, col))) [] [] [] BorderMap.empty
@@ -65,5 +65,6 @@ ui w = borderWithLabel versionLabel (center (worldImage w))
 main :: IO ()
 main = do
   hm <- makeHeightMap (Proxy @33)
-  let world = fromHeightMap hm sampleWorld
-  simpleMain (ui world)
+  let (World dry) = fromHeightMap hm sampleWorld
+  let wet = World (fmap Terrain.flood dry)
+  simpleMain (ui wet)

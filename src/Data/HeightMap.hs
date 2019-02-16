@@ -1,9 +1,8 @@
-{-# LANGUAGE KindSignatures, QuantifiedConstraints, ScopedTypeVariables, TemplateHaskell, TypeFamilies #-}
+{-# LANGUAGE KindSignatures, QuantifiedConstraints, ConstraintKinds, ScopedTypeVariables, TemplateHaskell, TypeFamilies #-}
 
 module Data.HeightMap
   ( HeightMap (..)
   , ValidSize
-  , samplehm
   , empty
   , lookup
   , insert
@@ -12,19 +11,20 @@ module Data.HeightMap
 
 import Prelude hiding (lookup)
 
-import           Control.Lens
+import           Control.Lens hiding (view)
 import           Control.Monad
 import           Control.Monad.Fail
 import           Data.Coerce
 import           Data.Maybe
 import           Data.Proxy
 import           Control.Effect
+import           Control.Effect.Lens
 import           Control.Effect.State
 import           Control.Effect.Reader
 import           Control.Effect.Random
 import           Debug.Trace
 import           GHC.TypeLits
-import           Data.Rect (Rect, Point (Point))
+import           Data.Rect (Rect, Point (Point), size, width, origin, xpos, ypos)
 import qualified Data.Rect as Rect
 import qualified Math.Geometry.Grid as G
 import           Math.Geometry.Grid.Square
@@ -45,8 +45,11 @@ instance ValidSize 65
 instance ValidSize 129
 instance ValidSize 257
 
-samplehm :: HeightMap
-samplehm = empty (Proxy @9)
+data Params = Params
+  { _spread :: Double
+  } deriving (Eq, Show)
+
+makeLenses ''Params
 
 empty :: forall n . ValidSize n => Proxy n -> HeightMap
 empty n = let size = fromIntegral $ natVal n
@@ -61,24 +64,31 @@ side (HeightMap m) = fst $ G.size m
 lookup :: Point Int -> HeightMap -> Maybe Double
 lookup (Point x y) (HeightMap h) = GM.lookup (x, y) h
 
-initializeCorners :: ( Member (State HeightMap) sig
-                     , Member (Reader (Rect Int)) sig
-                     , Carrier sig m, Monad m, MonadRandom m
-                     )
-                  => m [Double]
-initializeCorners = do
-  bounds <- ask
-  forM (Rect.corners bounds) $ \point -> do
-    rand <- getRandom
-    modify (insert point rand)
-    pure rand
+values :: HeightMap -> [Double]
+values (HeightMap m) = snd <$> GM.toList m
 
-setEdges :: ( Member (State HeightMap) sig
-            , Member (Reader (Rect Int)) sig
-            , Carrier sig m, Monad m, MonadRandom m
-            )
-         => [Double]
-         -> m ()
+type Displacement sig m =
+  ( Member (State HeightMap) sig
+  , Member (Reader (Rect Int)) sig
+  , Member (Reader Params) sig
+  , Carrier sig m, MonadRandom m
+  )
+
+initializeCorners :: Displacement sig m => m [Double]
+initializeCorners = do
+  bounds <- asks Rect.corners
+  forM bounds $ \point -> do
+    rand <- getRandom
+    rand <$ modify (insert point rand)
+
+jitter :: Displacement sig m => Double -> m Double
+jitter val = do
+  munge <- view spread
+  rand  <- getRandom
+  let aroundZero = (munge * rand * 2) - munge
+  pure (val + aroundZero)
+
+setEdges :: Displacement sig m => [Double] -> m [Double]
 setEdges [tl, tr, br, bl] = do
   let top    = avg tl tr
       right  = avg tr br
@@ -88,27 +98,54 @@ setEdges [tl, tr, br, bl] = do
 
   bounds <- fmap fromIntegral <$> ask @(Rect Int)
   let vals = zip [top, right, bottom, left] (Rect.edges bounds)
-  forM_ vals $ \(avg, pos) -> do
-    traceShowM (avg, pos)
-    modify (insert (fmap ceiling pos) avg)
+  forM vals $ \(avg, pos) -> do
+    jittered <- jitter avg
+    jittered <$ modify (insert (fmap ceiling pos) jittered)
 
+setCenter :: Displacement sig m => [Double] -> m ()
+setCenter vals = do
+  let avg = sum vals / fromIntegral (length vals)
+  jittered <- jitter avg
+  rect <- ask @(Rect Int)
+  let cent = (fmap fromIntegral rect) ^. Rect.center
+  modify (insert (fmap round cent) jittered)
+
+
+normalize :: Displacement sig m => m ()
+normalize = do
+  vals <- gets values
+  let min, max, span :: Double
+      min = minimum vals
+      max = maximum vals
+      span = max - min
+      compensate _ level = (10 * (level - min) / span)
+  modify (\(HeightMap hm) -> HeightMap (GM.mapWithKey compensate hm))
 
 makeHeightMap :: forall n . (ValidSize n) => Proxy n -> IO HeightMap
 makeHeightMap p = let hm = empty p in
   runM
   . evalRandomIO
   . execState hm
+  . runReader (Params 0.3)
   . runReader (Rect.rect 0 0 (side hm - 1) (side hm - 1))
   $ churn
 
-churn :: ( Member (State HeightMap) sig, Member (Reader (Rect Int)) sig, Carrier sig m, MonadRandom m) => m ()
+churn :: ( Member (State HeightMap) sig, Member (Reader (Rect Int)) sig, Member (Reader Params) sig, Carrier sig m, MonadRandom m) => m ()
 churn = do
-  (HeightMap hm) <- get
-  rands <- initializeCorners
-  mid <- getRandom
-  let [(cx, cy)] = G.centre (GM.toGrid hm)
-  modify (insert (Point cx cy) mid)
-  setEdges rands
+  initializeCorners >>= setEdges >>= setCenter
+  rect <- ask @(Rect Int)
+  if (rect^.width <= 2)
+    then normalize
+    else do
+      let newside = rect^.width `div` 2
+      let q1 = rect & size.mapped %~ (`div` 2)
+      local (const q1) churn
+      let q2 = q1 & origin.xpos +~ newside
+      local (const q2) churn
+      let q3 = q2 & origin.ypos +~ newside
+      local (const q3) churn
+      let q4 = q3 & origin.xpos -~ newside
+      local (const q4) churn
 
 -- average :: [Double] -> Double
 -- average [] = 0

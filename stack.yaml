@@ -46,6 +46,7 @@ extra-deps:
   - grid-7.8.12
   - Noise-1.0.6
   - semilattices-0.0.0.3
+  - fused-effects-lens-0.1.0.0
 
 # Override default flag values for local packages and extra-deps
 # flags: {}

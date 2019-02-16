@@ -12,6 +12,7 @@ module Data.Rect
   , midY
   , rect
   , integral
+  , center
   , origin
   , translate
   , scaled
@@ -82,6 +83,9 @@ midY = to (\r -> r^.minY + (r^.height / 2))
 maxX, maxY :: Num a => Getter (Rect a) a
 maxX = to (\r -> r^.minX + r^.width)
 maxY = to (\r -> r^.minY + r^.height)
+
+center :: Fractional a => Getter (Rect a) (Point a)
+center = to (\r -> Point (r^.midX) (r^.midY))
 
 integral :: (RealFrac a, Integral b) => Rect a -> Rect b
 integral r = Rect (fmap round (r^.origin)) (fmap ceiling (r^.size))

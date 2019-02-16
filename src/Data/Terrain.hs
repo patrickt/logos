@@ -56,11 +56,11 @@ biome = lens terrainBiome (\t h -> t { terrainBiome = h})
 
 flood :: Terrain -> Terrain
 flood t
-  | t^.height < 4 = t & biome .~ Ocean
+  | t^.height < 1 = t & biome .~ Ocean
   | otherwise     = t
 
 instance CharDisplay Terrain where
-  displayChar = displayChar . view biome
+  displayChar = displayChar . Elevation
   displayAttr a = displayAttr a . view biome
 
 instance CharDisplay (Elevation Terrain) where
