@@ -42,9 +42,6 @@ mainApp = Brick.App
   , appAttrMap      = const (Attr.attrMap Vty.defAttr [])
   }
 
-(///) :: (Integral a, Integral b) => a -> b -> Double
-a /// b = fromIntegral a / fromIntegral b
-
 pattern Key :: Vty.Key -> [Vty.Modifier] -> Brick.BrickEvent n e
 pattern Key a x = Brick.VtyEvent (Vty.EvKey a x)
 
@@ -87,15 +84,10 @@ handleEvent :: Logos.State
             -> Brick.BrickEvent Resource Event
             -> Brick.EventM Resource (Brick.Next Logos.State)
 handleEvent s e = case parseEvent e of
-  Nothing              -> Brick.continue s
-  Just Logos.Quit      -> Brick.halt s
-  Just Logos.Flood     -> do
-    x <- onFlood (s^.world)
-    Brick.continue (s & world .~ x)
-  Just Logos.Regen     -> do
+  Nothing                -> Brick.continue s
+  Just Logos.Quit        -> Brick.halt s
+  Just Logos.Flood       -> world onFlood s >>= Brick.continue
+  Just (Logos.Arrow vty) -> sidebar (List.handleListEvent vty) s >>= Brick.continue
+  Just Logos.Regen       -> do
     hm <- liftIO . makeHeightMap $ Proxy @33
-    done <- onFlood (fromHeightMap hm (s^.world))
-    Brick.continue (s & world .~ done)
-  Just (Logos.Arrow vty) -> do
-    newList <- List.handleListEvent vty (s^.sidebar)
-    Brick.continue (s & sidebar .~ newList)
+    world (onFlood . fromHeightMap hm) s >>= Brick.continue
