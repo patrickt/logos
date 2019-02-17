@@ -3,6 +3,8 @@
 module Data.Point
   ( Point (Point)
   , HasPoint (..)
+  , forGrid
+  , fromGrid
   ) where
 
 import Control.Lens.TH
@@ -20,3 +22,9 @@ instance Show a => Show (Point a) where
 instance Num a => Lower (Point a) where lowerBound = Point 0 0
 
 makeClassy ''Point
+
+forGrid :: Point Int -> (Int, Int)
+forGrid (Point a b) = (b, a)
+
+fromGrid :: (Int, Int) -> Point Int
+fromGrid (col, row) = Point row col

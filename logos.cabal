@@ -55,4 +55,5 @@ executable logos
                      , semilattices
                      , MonadRandom
                      , Noise
+                     , vector
                      , vty

@@ -34,6 +34,10 @@ resolver: lts-13.7
 #  - wai
 packages:
 - .
+- location:
+    git: https://github.com/robrix/fused-effects
+    commit: dde26852868dfe4ff57f2e876065c61c37b66749
+  extra-dep: true
 # Dependency packages to be pulled from upstream that are not in the resolver
 # using the same syntax as the packages field.
 # (e.g., acme-missiles-0.3)

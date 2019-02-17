@@ -15,7 +15,6 @@ module Data.HeightMap
 import Prelude hiding (lookup)
 
 import           Control.Effect
-import           Control.Effect.Lens
 import           Control.Effect.Random
 import           Control.Effect.Reader
 import           Control.Effect.State
@@ -47,12 +46,6 @@ empty :: forall n . ValidSize n => Proxy n -> HeightMap
 empty n = let size = fromIntegral $ natVal n
   in HeightMap (GM.lazyGridMap (rectSquareGrid size size) (repeat 0))
 
-data Params = Params
-  { _spread :: Double
-  } deriving (Eq, Show)
-
-makeLenses ''Params
-
 insert :: Point Int -> Double -> HeightMap -> HeightMap
 insert (Point x y) d (HeightMap m) = HeightMap (GM.insert (x, y) d m)
 
@@ -68,10 +61,12 @@ unsafeLookup p h = x where Just x = lookup p h
 values :: HeightMap -> [Double]
 values (HeightMap m) = snd <$> GM.toList m
 
+type Spread = Double
+
 type Displacement sig m =
   ( Member (State HeightMap) sig
   , Member (Reader (Rect Int)) sig
-  , Member (Reader Params) sig
+  , Member (Reader Spread) sig
   , Carrier sig m, MonadRandom m
   )
 
@@ -84,7 +79,7 @@ initializeCorners = do
 
 jitter :: Displacement sig m => Double -> m Double
 jitter val = do
-  munge <- view spread
+  munge <- ask @Spread
   rand  <- getRandom
   let aroundZero = (munge * rand * 2) - munge
   pure (val + aroundZero)
@@ -133,7 +128,7 @@ makeHeightMap p = let hm = empty p in
   . runM
   . evalRandomIO
   . execState hm
-  . runReader (Params 0.3)
+  . runReader (0.3 :: Spread)
   . runReader (Rect.rect 0 0 (side hm - 1) (side hm - 1))
   $ churn
 
@@ -147,7 +142,7 @@ churn = initializeCorners *> go *> normalize where
     when (rect^.width >= 2) $ do
       newside <- asks @(Rect Int) (^.width.to half)
       setEdges >>= setCenter
-      local (spread //~ 2.0)
+      local @Spread (/ 2.0)
         . recur (size.mapped %~ half)
         . recur (origin.x +~ newside)
         . recur (origin.y +~ newside)
