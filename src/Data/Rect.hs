@@ -9,6 +9,7 @@ module Data.Rect
   , center
   , origin
   , translate
+  , fractional
   , scaled
   , corners
   , edges
@@ -55,6 +56,9 @@ center = to (\r -> Point (r^.midX) (r^.midY))
 
 integral :: (RealFrac a, Integral b) => Rect a -> Rect b
 integral r = Rect (fmap round (r^.origin)) (fmap ceiling (r^.size))
+
+fractional :: (RealFrac b, Integral a) => Rect a -> Rect b
+fractional = fmap fromIntegral
 
 translate :: Num a => Point a -> Rect a -> Rect a
 translate p r = r & origin.x +~ p^.x

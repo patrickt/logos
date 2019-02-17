@@ -15,6 +15,8 @@ module Data.World
 
 import           Control.Effect
 import           Control.Effect.State
+import           Data.Foldable
+import           Data.Traversable
 import           Control.Effect.Lift
 import           Control.Lens
 import           Control.Monad
@@ -68,7 +70,7 @@ traverseWithPosition :: Monad m
                      => (Point Int -> Terrain -> m Terrain)
                      -> World
                      -> m World
-traverseWithPosition f (World m) = runM . fmap World . execState m $ do
-  forM (GM.toList m) $ \((pos :: (Int, Int)), terr) -> do
+traverseWithPosition f (World m) = runM . fmap World . execState m $
+  for (GM.toList m) $ \(pos, terr) -> do
     item <- sendM (f (fromGrid pos) terr)
     modify @(LGridMap RectSquareGrid Terrain) (GM.insert pos item)

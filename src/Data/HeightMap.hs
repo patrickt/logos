@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
-{-# LANGUAGE ConstraintKinds, KindSignatures, QuantifiedConstraints, ScopedTypeVariables, TemplateHaskell,
-             TypeFamilies, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE ConstraintKinds, KindSignatures, QuantifiedConstraints, ScopedTypeVariables, TypeFamilies, TypeOperators,
+             UndecidableInstances #-}
 
 module Data.HeightMap
   ( HeightMap (..)
@@ -18,14 +18,16 @@ import           Control.Effect
 import           Control.Effect.Random
 import           Control.Effect.Reader
 import           Control.Effect.State
-import           Control.Lens hiding (view, views)
+import           Control.Lens hiding (views)
 import           Control.Monad
 import           Control.Monad.IO.Class
+import           Data.Foldable
 import           Data.Point
 import           Data.Proxy
 import           Data.Rect as Rect
 import           Data.Size
-import GHC.Stack
+import           Data.Traversable
+import           GHC.Stack
 import           GHC.TypeLits
 import qualified Math.Geometry.Grid as G
 import           Math.Geometry.Grid.Square
@@ -39,7 +41,7 @@ newtype HeightMap = HeightMap
 class KnownNat n => ValidSize (n :: Nat)
 
 -- Valid for all n where n = (2^x + 1) for some x
-instance (KnownNat n, (2 ^ (Log2 (n - 1))) ~ (n - 1)) => ValidSize n
+instance (KnownNat n, (2 ^ Log2 (n - 1)) ~ (n - 1)) => ValidSize n
 
 -- Pass in a proof (with a proxy) that the dimensions are valid
 empty :: forall n . ValidSize n => Proxy n -> HeightMap
@@ -73,7 +75,7 @@ type Displacement sig m =
 initializeCorners :: Displacement sig m => m ()
 initializeCorners = do
   bounds <- asks Rect.corners
-  forM_ bounds $ \point -> do
+  for_ bounds $ \point -> do
     rand <- getRandom
     rand <$ modify (insert point rand)
 
@@ -97,7 +99,7 @@ setEdges = do
 
   bounds <- fmap (fromIntegral @_ @Double) <$> ask @(Rect Int)
   let vals = zip [top, right, bottom, left] (Rect.edges bounds)
-  forM vals $ \(avg, pos) -> do
+  for vals $ \(avg, pos) -> do
     jittered <- jitter avg
     jittered <$ modify (insert (fmap ceiling pos) jittered)
 
@@ -105,8 +107,7 @@ setCenter :: Displacement sig m => [Double] -> m ()
 setCenter vals = do
   let avg = sum vals / fromIntegral (length vals)
   jittered <- jitter avg
-  rect <- ask @(Rect Int)
-  let cent = (fmap (fromIntegral @_ @Double) rect) ^. Rect.center
+  cent <- asks @(Rect Int) (view center . fractional @Double)
   modify (insert (fmap round cent) jittered)
 
 -- multiply :: Displacement sig m => m ()
@@ -119,7 +120,7 @@ normalize = do
       min = minimum vals
       max = maximum vals
       span = max - min
-      compensate _ level = (10 * (level - min) / span)
+      compensate _ level = 10 * (level - min) / span
   modify (\(HeightMap hm) -> HeightMap (GM.mapWithKey compensate hm))
 
 makeHeightMap :: ValidSize n => Proxy n -> IO HeightMap

@@ -35,4 +35,4 @@ fromGrid (col, row) = Point col row
 
 distanceBetween :: forall a. Integral a => Point a -> Point a -> Double
 distanceBetween a b = sqrt (square (b^.x - a^.x) + square (b^.y - a^.y))
-  where square n = (fromIntegral @_ @Double n) ^^ (2 :: Integer)
+  where square n = fromIntegral @_ @Double n ^^ (2 :: Integer)

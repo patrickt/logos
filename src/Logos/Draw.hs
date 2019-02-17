@@ -2,7 +2,7 @@
 
 module Logos.Draw (draw) where
 
-import           Brick as Brick
+import           Brick
 import           Brick.Widgets.Border
 import           Brick.Widgets.Center
 import           Brick.Widgets.List
@@ -27,7 +27,6 @@ versionLabel = str ("logos v" <> showVersion version)
 draw :: Logos.State -> [Widget ()]
 draw s = run . runReader s $ do
   display <- readout
-  bar <- pure statusBar
   info <- views sidebar information
   let mainScreen = hBox [ keyBindings
                         , vBorder
@@ -35,7 +34,7 @@ draw s = run . runReader s $ do
                         , vBorder
                         , info
                         ]
-  pure $ [borderWithLabel versionLabel (mainScreen <=> hBorder <=> bar)]
+  pure [borderWithLabel versionLabel (mainScreen <=> hBorder <=> statusBar)]
 
 statusBar :: Widget n
 statusBar = vLimit 1 . center $ str "Status bar"
@@ -50,7 +49,7 @@ readout = do
   let Size w h = dimensions (state^.world)
   pure . Widget Fixed Fixed . render . Brick.vBox $ do
     row <- [0..(h - 1)]
-    pure $ Brick.hBox $ do
+    pure . Brick.hBox $ do
       col <- [0..(w - 1)]
       let res = lookupUnsafe (Point row col) (state^.world)
       pure . raw $ case idx of
@@ -60,16 +59,12 @@ readout = do
 
 keyBindings :: Widget n
 keyBindings = hLimit 30 . center $ vBox [ str "<r> Regenerate"
-                                        , str "<s> Step"
-                                        , str "<f> Flood world"
+                                        , str "<f> Adjust world"
                                         , str "<q> Quit"
                                         ]
 
 information :: (Monoid n, Show n, Ord n) => List n String -> Widget n
-information
-  = hLimit 30
-  . center
-  . renderList drawSelected True
+information = hLimit 30 . center . renderList drawSelected True
 
 drawSelected :: Bool -> String -> Widget n
 drawSelected False s = str s

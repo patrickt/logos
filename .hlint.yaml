@@ -1,0 +1,27 @@
+- arguments: [--color=auto, -XDataKinds, -XDeriveFoldable, -XDeriveFunctor, -XDeriveGeneric, -XDeriveTraversable, -XFlexibleContexts, -XFlexibleInstances, -XMultiParamTypeClasses, -XOverloadedStrings, -XRecordWildCards, -XStandaloneDeriving, -XStrictData, -XTypeApplications, -XDerivingVia]
+
+- functions:
+  - {name: unsafePerformIO, within: [Data.Scientific.Exts.attemptUnsafeArithmetic]}
+  - {name: unsafeCoerce, within: []}
+  - {name: head, within: []}
+  - {name: tail, within: []}
+  - {name: init, within: []}
+  - {name: last, within: []}
+  - {name: fromJust, within: []}
+
+- group: {name: dollar, enabled: true}
+
+- group: {name: generalise, enabled: true}
+
+- ignore: {name: Use module export list}
+
+- warning: {lhs: mapM, rhs: traverse, name: Generalize mapM}
+- warning: {lhs: mapM_, rhs: traverse_, name: Generalize mapM_}
+- warning: {lhs: forM, rhs: for, name: Generalize forM}
+- warning: {lhs: forM_, rhs: for_, name: Generalize forM_}
+- warning: {lhs: sequence, rhs: sequenceA, name: Generalize sequence}
+- warning: {lhs: sequence_, rhs: sequenceA_, name: Generalize sequence_}
+- warning: {lhs: return, rhs: pure, name: Avoid return}
+
+- warning: {lhs: f <$> pure a <*> b, rhs: f a <$> b, name: Avoid redundant pure}
+- warning: {lhs: f <$> pure a <* b, rhs: f a <$ b, name: Avoid redundant pure}
