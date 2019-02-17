@@ -71,7 +71,7 @@ onFlood x = do
                                             , distanceBetween atTop pos
                                             , distanceBetween atBot pos
                                             ]
-          adjusted = (offset + jitter) * 100
+          adjusted = (offset + jitter) * 120
           newTemp = case t^.biome of
             Mountain -> jitter * 20
             Ocean    -> adjusted * 0.7

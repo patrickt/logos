@@ -34,8 +34,8 @@ instance CharDisplay Biome where
   displayChar = \case
     Ocean    -> '~'
     Forest   -> 'T'
-    Plains   -> '.'
     Desert   -> '#'
+    Plains   -> '\x2591'
     Mountain -> '^'
 
   displayAttr attr self = attr `Attr.withForeColor` color where
