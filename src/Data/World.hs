@@ -13,7 +13,6 @@ module Data.World
   , dimensions
   ) where
 
-import           Brick as Brick hiding (Size)
 import           Control.Effect
 import           Control.Effect.State
 import           Control.Effect.Lift

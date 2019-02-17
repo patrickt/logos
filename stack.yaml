@@ -48,7 +48,6 @@ extra-deps:
   - text-zipper-0.10.1
   - word-wrap-0.4.1
   - grid-7.8.12
-  - Noise-1.0.6
   - semilattices-0.0.0.3
   - fused-effects-lens-0.1.0.0
 

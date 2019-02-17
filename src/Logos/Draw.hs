@@ -10,7 +10,6 @@ import           Control.Effect
 import           Control.Effect.Reader
 import           Control.Lens hiding (views)
 import           Control.Effect.Lens
-import           Data.Vector (Vector)
 import           Data.Version
 import qualified Graphics.Vty as Vty
 

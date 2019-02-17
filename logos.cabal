@@ -15,8 +15,7 @@ extra-source-files:  README.md
 executable logos
   hs-source-dirs:      src
   main-is:             Main.hs
-  other-modules:       Noise
-                     , Data.HeightMap
+  other-modules:       Data.HeightMap
                      , Data.Point
                      , Data.Rect
                      , Data.Size
@@ -54,6 +53,5 @@ executable logos
                      , random
                      , semilattices
                      , MonadRandom
-                     , Noise
                      , vector
                      , vty

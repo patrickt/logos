@@ -14,12 +14,9 @@ module Data.Terrain
   ) where
 
 import Control.Lens
-import Control.Monad.Random
-import Data.Point
 import qualified Graphics.Vty as Vty
 import qualified Graphics.Vty.Attributes as Attr
 import qualified Graphics.Vty.Image as Image
-import Debug.Trace
 
 newtype Elevation a = Elevation a
 newtype Temperature a = Temperature a
