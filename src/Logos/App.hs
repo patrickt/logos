@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE LambdaCase, ScopedTypeVariables #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Logos.App where
@@ -9,12 +9,17 @@ import qualified Brick.Widgets.List as List
 import           Control.Lens
 import           Control.Monad.IO.Class
 import           Control.Monad.Random
+import           Data.List
 import           Data.Proxy
 import qualified Graphics.Vty as Vty
+import Data.Ord
 
 import           Data.HeightMap
+import           Data.Point (distanceBetween, x, y)
+import           Data.Size (width)
 import           Data.Terrain
 import           Data.World
+import           Debug.Trace
 import qualified Logos.Draw as Draw
 import qualified Logos.Event as Logos
 import           Logos.State (sidebar, world)
@@ -38,6 +43,9 @@ mainApp = Brick.App
   , appAttrMap      = const (Attr.attrMap Vty.defAttr [])
   }
 
+(///) :: (Integral a, Integral b) => a -> b -> Double
+a /// b = fromIntegral a / fromIntegral b
+
 parseEvent :: Brick.BrickEvent Resource Event -> Maybe Logos.Event
 parseEvent = \case
   Brick.VtyEvent (Vty.EvKey (Vty.KChar 'q') _)   -> Just Logos.Quit
@@ -47,19 +55,45 @@ parseEvent = \case
   Brick.VtyEvent k@(Vty.EvKey Vty.KDown       _) -> Just (Logos.Arrow k)
   _                                              -> Nothing
 
+onFlood :: MonadRandom m => World -> m World
+onFlood x = do
+  let w = deluge x
+  let middle = center w
+  let balance pos t = do
+        let (ht :: Int) = Control.Lens.view width (dimensions w)
+        let atTop = pos & y .~ 0
+        let atBot = pos & y .~ ht
+        let lower = minimumBy (comparing abs) [ distanceBetween pos atTop, distanceBetween pos atBot
+                                              , distanceBetween atTop pos, distanceBetween atBot pos
+                                              ]
+
+        let offset = sin ((lower / (fromIntegral ht)) * (pi / 2))
+        --traceShowM (pos, lower, ht, offset)
+        temp <- fmap (/5) $ getRandom
+        let adjusted = (offset + temp) * 100 --min 101 ((offset + temp) * 140)
+        let newTemp = case t^.biome of
+              Mountain -> temp * 20
+              Ocean    -> adjusted * 0.7
+              _        -> adjusted
+        pure (t & temperature .~ newTemp)
+  traverseWithPosition balance w
+
 handleEvent :: Logos.State
             -> Brick.BrickEvent Resource Event
             -> Brick.EventM Resource (Brick.Next Logos.State)
 handleEvent s e = case parseEvent e of
-  Nothing              -> Brick.continue s
+  Nothing              -> do
+    hm <- liftIO . makeHeightMap $ Proxy @33
+    done <- onFlood (fromHeightMap hm (s^.world))
+    Brick.continue (s & world .~ done)
   Just Logos.Quit      -> Brick.halt s
   Just Logos.Flood     -> do
-    withTemp <- traverseWithPosition balance (s^.world.to deluge)
-    Brick.continue (s & world .~ withTemp)
+    x <- onFlood (s^.world)
+    Brick.continue (s & world .~ x)
   Just Logos.Regen     -> do
     hm <- liftIO . makeHeightMap $ Proxy @33
-    let newState = s & world %~ fromHeightMap hm
-    Brick.continue newState
+    done <- onFlood (fromHeightMap hm (s^.world))
+    Brick.continue (s & world .~ done)
   Just (Logos.Arrow vty) -> do
     newList <- List.handleListEvent vty (s^.sidebar)
     Brick.continue (s & sidebar .~ newList)

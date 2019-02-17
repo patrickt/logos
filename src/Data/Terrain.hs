@@ -6,7 +6,6 @@ module Data.Terrain
   , biome
   , temperature
   , flood
-  , balance
   , lookup
   , Biome (..)
   , charImage
@@ -66,14 +65,6 @@ flood t = set biome go t
       | t^.height > 7.5 = Mountain
       | otherwise       = Plains
 
-balance :: MonadRandom m
-        => Point Int
-        -> Terrain
-        -> m Terrain
-balance _ t = do
-  temp <- getRandom
-  pure (t & temperature .~ (temp * 100))
-
 instance CharDisplay Terrain where
   displayChar = displayChar . view biome
   displayAttr a = displayAttr a . view biome
@@ -90,6 +81,8 @@ instance CharDisplay (Temperature Terrain) where
   displayAttr a (Temperature r) = a `Attr.withForeColor` color where
     t = r^.temperature
     color
+      | t < 5     = Attr.rgbColor @Int 255 255 255
+      | t < 10    = Attr.rgbColor @Int 221 252 255
       | t < 20    = Attr.rgbColor @Int 234 252 255
       | t < 40    = Attr.rgbColor @Int 255 245 211
       | t < 60    = Attr.rgbColor @Int 255 181 168
