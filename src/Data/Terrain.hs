@@ -49,7 +49,7 @@ instance CharDisplay Biome where
 data Terrain = Terrain
   { _height      :: !Double
   , _biome       :: !Biome
-  , _temperature :: Double
+  , _temperature :: !Double
   } deriving (Show, Eq)
 
 makeLenses ''Terrain

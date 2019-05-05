@@ -43,6 +43,7 @@ executable logos
                      , StrictData
                      , TypeApplications
   build-depends:       base >= 4.7 && < 5
+                     , async
                      , brick
                      , finite-typelits
                      , fused-effects

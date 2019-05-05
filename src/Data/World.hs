@@ -15,11 +15,9 @@ module Data.World
 
 import           Control.Effect
 import           Control.Effect.State
-import           Data.Foldable
 import           Data.Traversable
 import           Control.Effect.Lift
 import           Control.Lens
-import           Control.Monad
 import           Data.HeightMap as HeightMap
 import           Data.Maybe
 import           Data.Point

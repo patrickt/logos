@@ -24,7 +24,6 @@ import qualified Logos.Event as Logos
 import           Logos.State (sidebar, world)
 import qualified Logos.State as Logos
 
-type Event = ()
 type Resource = ()
 
 instance MonadRandom (Brick.EventM r) where
@@ -33,7 +32,7 @@ instance MonadRandom (Brick.EventM r) where
   getRandomRs = liftIO . getRandomRs
   getRandoms  = liftIO getRandoms
 
-mainApp :: Brick.App Logos.State Event Resource
+mainApp :: Brick.App Logos.State Logos.Event Resource
 mainApp = Brick.App
   { appDraw         = Draw.draw
   , appChooseCursor = \_ _ -> Nothing
@@ -45,7 +44,7 @@ mainApp = Brick.App
 pattern Key :: Vty.Key -> [Vty.Modifier] -> Brick.BrickEvent n e
 pattern Key a x = Brick.VtyEvent (Vty.EvKey a x)
 
-parseEvent :: Brick.BrickEvent Resource Event -> Maybe Logos.Event
+parseEvent :: Brick.BrickEvent Resource Logos.Event -> Maybe Logos.Event
 parseEvent = \case
   Key (Vty.KChar 'q') _                    -> Just Logos.Quit
   Key (Vty.KChar 'r') _                    -> Just Logos.Regen
@@ -54,6 +53,7 @@ parseEvent = \case
   Key (Vty.KChar 'n') [Vty.MCtrl]          -> Just (Logos.Arrow (Vty.EvKey Vty.KDown []))
   Brick.VtyEvent k@(Vty.EvKey Vty.KUp   _) -> Just (Logos.Arrow k)
   Brick.VtyEvent k@(Vty.EvKey Vty.KDown _) -> Just (Logos.Arrow k)
+  Brick.AppEvent e                         -> Just e
   _                                        -> Nothing
 
 onFlood :: MonadRandom m => World -> m World
@@ -81,7 +81,7 @@ onFlood x = do
   traverseWithPosition balance w
 
 handleEvent :: Logos.State
-            -> Brick.BrickEvent Resource Event
+            -> Brick.BrickEvent Resource Logos.Event
             -> Brick.EventM Resource (Brick.Next Logos.State)
 handleEvent s e = case parseEvent e of
   Nothing                -> Brick.continue s
