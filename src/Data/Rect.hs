@@ -40,8 +40,8 @@ rect :: a -> a -> a -> a -> Rect a
 rect a b c d = Rect (Point a b) (Size c d)
 
 minX, minY :: Getter (Rect a) a
-minX = origin.x
-minY = origin.y
+minX = origin.xPos
+minY = origin.yPos
 
 midX, midY :: Fractional a => Getter (Rect a) a
 midX = to (\r -> r^.minX + (r^.width / 2))
@@ -61,8 +61,8 @@ fractional :: (RealFrac b, Integral a) => Rect a -> Rect b
 fractional = fmap fromIntegral
 
 translate :: Num a => Point a -> Rect a -> Rect a
-translate p r = r & origin.x +~ p^.x
-                  & origin.y +~ p^.y
+translate p r = r & origin.xPos +~ p^.xPos
+                  & origin.yPos +~ p^.yPos
 
 inset :: Num a => a -> Rect a -> Rect a
 inset p r = r & size.width -~ p

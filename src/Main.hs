@@ -15,8 +15,9 @@ import qualified Logos.Event as Logos
 main :: IO ()
 main = do
   let builder = mkVty defaultConfig
+  vty <- builder
   ticker <- newBChan 1
   void . async . forever $ do
     threadDelay 1000000
     writeBChan ticker Logos.Flood
-  void $ customMain builder (Just ticker) Logos.mainApp (initialState (Proxy @33))
+  void $ customMain vty builder (Just ticker) Logos.mainApp (initialState (Proxy @33))

@@ -14,8 +14,8 @@ import Control.Lens.Getter
 import Data.Semilattice.Lower
 
 data Point a = Point
-  { _x :: !a
-  , _y :: !a
+  { _xPos :: !a
+  , _yPos :: !a
   } deriving (Eq, Functor)
 
 instance Show a => Show (Point a) where
@@ -36,3 +36,5 @@ fromGrid (col, row) = Point col row
 distanceBetween :: forall a. Integral a => Point a -> Point a -> Double
 distanceBetween a b = sqrt (square (b^.x - a^.x) + square (b^.y - a^.y))
   where square n = fromIntegral @_ @Double n ^^ (2 :: Integer)
+        x = xPos
+        y = yPos

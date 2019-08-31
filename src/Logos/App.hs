@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase, ScopedTypeVariables, PatternSynonyms #-}
+{-# LANGUAGE LambdaCase, PatternSynonyms, ScopedTypeVariables #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Logos.App where
@@ -10,12 +10,11 @@ import           Control.Lens
 import           Control.Monad.IO.Class
 import           Control.Monad.Random
 import           Data.List
+import           Data.Ord
 import           Data.Proxy
 import qualified Graphics.Vty as Vty
-import Data.Ord
 
-import           Data.HeightMap
-import           Data.Point (distanceBetween, y)
+import           Data.Point (distanceBetween, yPos)
 import           Data.Size (width)
 import           Data.Terrain
 import           Data.World
@@ -23,6 +22,7 @@ import qualified Logos.Draw as Draw
 import qualified Logos.Event as Logos
 import           Logos.State (sidebar, world)
 import qualified Logos.State as Logos
+import           Logos.Terrain
 
 type Resource = ()
 
@@ -64,8 +64,8 @@ onFlood x = do
         jitter <- fmap (/5) $ getRandom
         let
           offset = sin ((lower / (fromIntegral ht)) * (pi / 2))
-          atTop = pos & y .~ 0
-          atBot = pos & y .~ ht
+          atTop = pos & yPos .~ 0
+          atBot = pos & yPos .~ ht
           lower = minimumBy (comparing abs) [ distanceBetween pos atTop
                                             , distanceBetween pos atBot
                                             , distanceBetween atTop pos
@@ -89,5 +89,5 @@ handleEvent s e = case parseEvent e of
   Just Logos.Flood       -> world onFlood s >>= Brick.continue
   Just (Logos.Arrow vty) -> sidebar (List.handleListEvent vty) s >>= Brick.continue
   Just Logos.Regen       -> do
-    hm <- liftIO . makeHeightMap $ Proxy @33
+    hm <- liftIO . generateTerrain $ Proxy @33
     world (onFlood . fromHeightMap hm) s >>= Brick.continue

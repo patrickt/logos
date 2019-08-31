@@ -1,15 +1,15 @@
+cabal-version:       2.4
 name:                logos
 version:             0.1.0.0
 -- synopsis:
 -- description:
 homepage:            https://github.com/patrickt/logos#readme
-license:             AllRightsReserved
+license:             GPL-3.0-or-later
 author:              Patrick Thomson
 maintainer:          patrickt@github.com
 copyright:           Patrick Thomson
 category:            Web
 build-type:          Simple
-cabal-version:       >=1.10
 extra-source-files:  README.md
 
 executable logos
@@ -25,6 +25,8 @@ executable logos
                      , Logos.Draw
                      , Logos.Event
                      , Logos.State
+                     , Logos.Terrain
+                     , Instances
   default-language:    Haskell2010
   ghc-options:         -threaded -Wall -Werror
   other-modules:       Paths_logos
@@ -46,7 +48,7 @@ executable logos
                      , async
                      , brick
                      , finite-typelits
-                     , fused-effects
+                     , fused-effects ^>= 0.5
                      , fused-effects-lens
                      , grid
                      , hedgehog
@@ -54,5 +56,6 @@ executable logos
                      , random
                      , semilattices
                      , MonadRandom
+                     , transformers ^>= 0.5.6
                      , vector
                      , vty
